@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Battle - Real-time Quiz Competition</title>
+    <link rel="stylesheet" href="trivia-battle.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="logo-container">
+                <h1 class="game-title">Trivia Battle</h1>
+                <p class="tagline">Real-time quiz competition</p>
+            </div>
+            
+            <div class="welcome-content">
+                <input type="text" id="player-name" class="input-field" placeholder="Enter your name" maxlength="20">
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="createRoom()">
+                        <span class="icon">🎮</span> Create Room
+                    </button>
+                    <button class="btn btn-secondary" onclick="showJoinScreen()">
+                        <span class="icon">🔗</span> Join Room
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Room Screen -->
+        <div id="join-screen" class="screen">
+            <button class="back-btn" onclick="showWelcomeScreen()">← Back</button>
+            <div class="join-content">
+                <h2>Join a Room</h2>
+                <input type="text" id="room-code" class="input-field room-code-input" placeholder="Enter Room Code" maxlength="6">
+                <button class="btn btn-primary" onclick="joinRoom()">Join Game</button>
+            </div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="lobby-header">
+                <h2>Game Lobby</h2>
+                <div class="room-info">
+                    <span>Room Code:</span>
+                    <span class="room-code-display" id="room-code-display">ABC123</span>
+                    <button class="copy-btn" onclick="copyRoomCode()">📋</button>
+                </div>
+            </div>
+
+            <div class="players-grid" id="players-grid">
+                <!-- Players will be dynamically added here -->
+            </div>
+
+            <div class="category-selection">
+                <h3>Select Categories</h3>
+                <div class="categories-grid">
+                    <label class="category-option">
+                        <input type="checkbox" value="general" checked>
+                        <span class="category-card">📚 General</span>
+                    </label>
+                    <label class="category-option">
+                        <input type="checkbox" value="movies">
+                        <span class="category-card">🎬 Movies</span>
+                    </label>
+                    <label class="category-option">
+                        <input type="checkbox" value="sports">
+                        <span class="category-card">⚽ Sports</span>
+                    </label>
+                    <label class="category-option">
+                        <input type="checkbox" value="tech">
+                        <span class="category-card">💻 Tech</span>
+                    </label>
+                    <label class="category-option">
+                        <input type="checkbox" value="music">
+                        <span class="category-card">🎵 Music</span>
+                    </label>
+                    <label class="category-option">
+                        <input type="checkbox" value="science">
+                        <span class="category-card">🔬 Science</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary start-btn" onclick="startGame()">Start Game</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                    <span class="progress-text">Question <span id="current-question">1</span>/10</span>
+                </div>
+                
+                <div class="timer-container">
+                    <svg class="timer-svg" width="60" height="60">
+                        <circle class="timer-bg" cx="30" cy="30" r="25"></circle>
+                        <circle class="timer-progress" cx="30" cy="30" r="25" id="timer-circle"></circle>
+                    </svg>
+                    <span class="timer-text" id="timer-text">15</span>
+                </div>
+            </div>
+
+            <div class="live-scores" id="live-scores">
+                <!-- Live player scores will be shown here -->
+            </div>
+
+            <div class="question-container">
+                <div class="category-badge" id="category-badge">General Knowledge</div>
+                <h3 class="question-text" id="question-text">Loading question...</h3>
+                
+                <div class="answers-grid" id="answers-grid">
+                    <!-- Answer buttons will be dynamically added -->
+                </div>
+            </div>
+
+            <div class="power-ups">
+                <button class="power-up-btn" onclick="usePowerUp('skip')" id="skip-btn">
+                    <span class="power-icon">⏭️</span>
+                    <span class="power-label">Skip</span>
+                </button>
+                <button class="power-up-btn" onclick="usePowerUp('fifty')" id="fifty-btn">
+                    <span class="power-icon">50/50</span>
+                    <span class="power-label">Half</span>
+                </button>
+                <button class="power-up-btn" onclick="usePowerUp('time')" id="time-btn">
+                    <span class="power-icon">⏰</span>
+                    <span class="power-label">+10s</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="results-header">
+                <h2>Game Over!</h2>
+                <div class="winner-announcement" id="winner-announcement">
+                    <!-- Winner will be announced here -->
+                </div>
+            </div>
+
+            <div class="final-leaderboard" id="final-leaderboard">
+                <!-- Final rankings will be shown here -->
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="correct-answers">0</span>
+                    <span class="stat-label">Correct Answers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="total-score">0</span>
+                    <span class="stat-label">Total Score</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="avg-time">0s</span>
+                    <span class="stat-label">Avg Response Time</span>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="playAgain()">Play Again</button>
+                <button class="btn btn-secondary" onclick="backToLobby()">Back to Lobby</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Effects -->
+    <div class="celebration-container" id="celebration"></div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="trivia-battle.js"></script>
+</body>
+</html>
