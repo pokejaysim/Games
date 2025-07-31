@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Pong - AI Arcade</title>
+    <link rel="stylesheet" href="modern-pong.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen active">
+            <div class="menu-content">
+                <h1 class="game-title">
+                    <span class="neon-text">MODERN</span>
+                    <span class="neon-text glow-blue">PONG</span>
+                </h1>
+                <p class="subtitle">AI Arcade Experience</p>
+                
+                <div class="menu-options">
+                    <button class="menu-btn" onclick="showGameSetup()">
+                        <span class="btn-icon">🎮</span>
+                        <span>Play Game</span>
+                    </button>
+                    <button class="menu-btn" onclick="showRecords()">
+                        <span class="btn-icon">🏆</span>
+                        <span>Records</span>
+                    </button>
+                    <button class="menu-btn" onclick="showSettings()">
+                        <span class="btn-icon">⚙️</span>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Setup Screen -->
+        <div id="game-setup" class="screen">
+            <div class="setup-content">
+                <h2 class="neon-text">Game Setup</h2>
+                
+                <div class="setup-section">
+                    <h3>Game Mode</h3>
+                    <div class="option-grid">
+                        <label class="option-card">
+                            <input type="radio" name="gameMode" value="classic" checked>
+                            <div class="card-content">
+                                <div class="card-icon">🎯</div>
+                                <div class="card-title">Classic</div>
+                                <div class="card-desc">First to 10 wins</div>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="gameMode" value="timeAttack">
+                            <div class="card-content">
+                                <div class="card-icon">⏱️</div>
+                                <div class="card-title">Time Attack</div>
+                                <div class="card-desc">2 minutes max points</div>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="gameMode" value="survival">
+                            <div class="card-content">
+                                <div class="card-icon">💪</div>
+                                <div class="card-title">Survival</div>
+                                <div class="card-desc">Increasing difficulty</div>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="gameMode" value="practice">
+                            <div class="card-content">
+                                <div class="card-icon">🎓</div>
+                                <div class="card-title">Practice</div>
+                                <div class="card-desc">Casual play</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>AI Difficulty</h3>
+                    <div class="difficulty-slider">
+                        <input type="range" id="difficulty" min="1" max="4" value="2">
+                        <div class="difficulty-labels">
+                            <span>Beginner</span>
+                            <span>Intermediate</span>
+                            <span>Expert</span>
+                            <span>Impossible</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>AI Personality</h3>
+                    <div class="personality-grid">
+                        <label class="personality-card">
+                            <input type="radio" name="aiPersonality" value="casual" checked>
+                            <div class="personality-content">
+                                <div class="personality-icon">😎</div>
+                                <div class="personality-name">Casual</div>
+                                <div class="personality-desc">Makes human-like mistakes</div>
+                            </div>
+                        </label>
+                        <label class="personality-card">
+                            <input type="radio" name="aiPersonality" value="aggressive">
+                            <div class="personality-content">
+                                <div class="personality-icon">🔥</div>
+                                <div class="personality-name">Aggressive</div>
+                                <div class="personality-desc">Fast and powerful shots</div>
+                            </div>
+                        </label>
+                        <label class="personality-card">
+                            <input type="radio" name="aiPersonality" value="defensive">
+                            <div class="personality-content">
+                                <div class="personality-icon">🛡️</div>
+                                <div class="personality-name">Defensive</div>
+                                <div class="personality-desc">Returns everything</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setup-buttons">
+                    <button class="btn btn-secondary" onclick="showMainMenu()">Back</button>
+                    <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-hud">
+                <div class="hud-left">
+                    <div class="score-display">
+                        <span class="score-label">YOU</span>
+                        <span class="score-value" id="player-score">0</span>
+                    </div>
+                </div>
+                
+                <div class="hud-center">
+                    <div class="game-info">
+                        <div class="mode-display" id="mode-display">Classic Mode</div>
+                        <div class="ai-info" id="ai-info">Casual AI - Intermediate</div>
+                        <div class="timer-display" id="timer-display"></div>
+                    </div>
+                </div>
+                
+                <div class="hud-right">
+                    <div class="score-display">
+                        <span class="score-label">AI</span>
+                        <span class="score-value" id="ai-score">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <canvas id="game-canvas" width="800" height="400"></canvas>
+            
+            <div class="game-controls">
+                <button class="control-btn" onclick="pauseGame()">
+                    <span id="pause-icon">⏸️</span>
+                </button>
+                <button class="control-btn" onclick="showMainMenu()">🏠</button>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div class="mobile-controls" id="mobile-controls">
+                <div class="touch-area touch-up" id="touch-up">
+                    <div class="touch-arrow">▲</div>
+                </div>
+                <div class="touch-area touch-down" id="touch-down">
+                    <div class="touch-arrow">▼</div>
+                </div>
+            </div>
+
+            <!-- Power-up Notification -->
+            <div class="powerup-notification" id="powerup-notification">
+                <div class="powerup-icon"></div>
+                <div class="powerup-text"></div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over" class="screen">
+            <div class="game-over-content">
+                <h2 class="result-title" id="result-title">Victory!</h2>
+                <div class="final-score">
+                    <div class="score-breakdown">
+                        <div class="final-score-item">
+                            <span class="score-label">Your Score</span>
+                            <span class="score-value" id="final-player-score">0</span>
+                        </div>
+                        <div class="final-score-item">
+                            <span class="score-label">AI Score</span>
+                            <span class="score-value" id="final-ai-score">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-stats" id="game-stats">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+
+                <div class="game-over-buttons">
+                    <button class="btn btn-secondary" onclick="showMainMenu()">Main Menu</button>
+                    <button class="btn btn-primary" onclick="playAgain()">Play Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Screen -->
+        <div id="records" class="screen">
+            <div class="records-content">
+                <h2 class="neon-text">Personal Records</h2>
+                
+                <div class="records-grid" id="records-grid">
+                    <!-- Records will be populated by JavaScript -->
+                </div>
+                
+                <div class="records-buttons">
+                    <button class="btn btn-secondary" onclick="clearRecords()">Clear Records</button>
+                    <button class="btn btn-primary" onclick="showMainMenu()">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings" class="screen">
+            <div class="settings-content">
+                <h2 class="neon-text">Settings</h2>
+                
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Sound Effects</label>
+                        <input type="checkbox" id="sound-toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Particle Effects</label>
+                        <input type="checkbox" id="particles-toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Screen Shake</label>
+                        <input type="checkbox" id="shake-toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Show FPS</label>
+                        <input type="checkbox" id="fps-toggle">
+                    </div>
+                </div>
+
+                <div class="controls-help">
+                    <h3>Controls</h3>
+                    <div class="controls-list">
+                        <div class="control-item">
+                            <span class="control-key">W / ↑</span>
+                            <span class="control-desc">Move paddle up</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">S / ↓</span>
+                            <span class="control-desc">Move paddle down</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">Space</span>
+                            <span class="control-desc">Pause game</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="showMainMenu()">Back</button>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen overlay">
+            <div class="pause-content">
+                <h2 class="neon-text">Paused</h2>
+                <div class="pause-buttons">
+                    <button class="btn btn-primary" onclick="resumeGame()">Resume</button>
+                    <button class="btn btn-secondary" onclick="showMainMenu()">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas" width="800" height="400"></canvas>
+
+    <!-- FPS Display -->
+    <div id="fps-display" class="fps-counter"></div>
+
+    <script src="modern-pong.js"></script>
+</body>
+</html>
