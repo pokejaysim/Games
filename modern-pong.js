@@ -603,60 +603,89 @@ function createPowerupParticles(x, y, color) {
 }
 
 // Sound System
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let audioContext = null;
+
+function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.warn('Audio not supported:', e);
+        settings.soundEnabled = false;
+    }
+}
 
 function playSound(type) {
-    if (!settings.soundEnabled) return;
+    if (!settings.soundEnabled || !audioContext) return;
     
-    const sounds = {
-        paddleBounce: { frequency: 220, duration: 0.1, type: 'square' },
-        wallBounce: { frequency: 440, duration: 0.1, type: 'sine' },
-        score: { frequency: 880, duration: 0.3, type: 'triangle' },
-        powerup: { frequency: 660, duration: 0.2, type: 'sawtooth' }
-    };
-    
-    const sound = sounds[type];
-    if (!sound) return;
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(sound.frequency, audioContext.currentTime);
-    oscillator.type = sound.type;
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + sound.duration);
+    try {
+        const sounds = {
+            paddleBounce: { frequency: 220, duration: 0.1, type: 'square' },
+            wallBounce: { frequency: 440, duration: 0.1, type: 'sine' },
+            score: { frequency: 880, duration: 0.3, type: 'triangle' },
+            powerup: { frequency: 660, duration: 0.2, type: 'sawtooth' }
+        };
+        
+        const sound = sounds[type];
+        if (!sound) return;
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(sound.frequency, audioContext.currentTime);
+        oscillator.type = sound.type;
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch (e) {
+        console.warn('Audio playback failed:', e);
+    }
 }
 
 // Game Logic
 function initGame() {
-    canvas = document.getElementById('game-canvas');
-    ctx = canvas.getContext('2d');
-    particleCanvas = document.getElementById('particle-canvas');
-    particleCtx = particleCanvas.getContext('2d');
+    console.log('Initializing Modern Pong...');
     
-    // Set canvas size
-    resizeCanvas();
-    
-    // Initialize game objects
-    gameState.ball = new Ball(canvas.width / 2, canvas.height / 2);
-    gameState.playerPaddle = new Paddle(30, canvas.height / 2 - 40, true);
-    gameState.aiPaddle = new Paddle(canvas.width - 42, canvas.height / 2 - 40, false);
-    
-    // Load settings
-    loadSettings();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Start game loop
-    gameLoop();
+    try {
+        canvas = document.getElementById('game-canvas');
+        ctx = canvas.getContext('2d');
+        particleCanvas = document.getElementById('particle-canvas');
+        particleCtx = particleCanvas.getContext('2d');
+        
+        if (!canvas || !ctx || !particleCanvas || !particleCtx) {
+            console.error('Canvas elements not found');
+            return;
+        }
+        
+        // Initialize audio
+        initAudio();
+        
+        // Set canvas size
+        resizeCanvas();
+        
+        // Initialize game objects
+        gameState.ball = new Ball(canvas.width / 2, canvas.height / 2);
+        gameState.playerPaddle = new Paddle(30, canvas.height / 2 - 40, true);
+        gameState.aiPaddle = new Paddle(canvas.width - 42, canvas.height / 2 - 40, false);
+        
+        // Load settings
+        loadSettings();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Start game loop
+        gameLoop();
+        
+        console.log('Modern Pong initialized successfully!');
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+    }
 }
 
 function resizeCanvas() {
@@ -673,99 +702,120 @@ function resizeCanvas() {
 }
 
 function setupEventListeners() {
-    // Keyboard events
-    document.addEventListener('keydown', (e) => {
-        switch(e.code) {
-            case 'KeyW':
-            case 'ArrowUp':
-                keys.up = true;
+    try {
+        // Keyboard events
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'KeyW':
+                case 'ArrowUp':
+                    keys.up = true;
+                    e.preventDefault();
+                    break;
+                case 'KeyS':
+                case 'ArrowDown':
+                    keys.down = true;
+                    e.preventDefault();
+                    break;
+                case 'Space':
+                    keys.space = true;
+                    if (gameState.isPlaying) {
+                        pauseGame();
+                    }
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            switch(e.code) {
+                case 'KeyW':
+                case 'ArrowUp':
+                    keys.up = false;
+                    break;
+                case 'KeyS':
+                case 'ArrowDown':
+                    keys.down = false;
+                    break;
+                case 'Space':
+                    keys.space = false;
+                    break;
+            }
+        });
+        
+        // Touch events for mobile
+        const touchUp = document.getElementById('touch-up');
+        const touchDown = document.getElementById('touch-down');
+        
+        if (touchUp && touchDown) {
+            touchUp.addEventListener('touchstart', (e) => {
+                touchState.up = true;
                 e.preventDefault();
-                break;
-            case 'KeyS':
-            case 'ArrowDown':
-                keys.down = true;
+            });
+            
+            touchUp.addEventListener('touchend', (e) => {
+                touchState.up = false;
                 e.preventDefault();
-                break;
-            case 'Space':
-                keys.space = true;
-                if (gameState.isPlaying) {
-                    pauseGame();
+            });
+            
+            touchDown.addEventListener('touchstart', (e) => {
+                touchState.down = true;
+                e.preventDefault();
+            });
+            
+            touchDown.addEventListener('touchend', (e) => {
+                touchState.down = false;
+                e.preventDefault();
+            });
+        }
+        
+        // Window resize
+        window.addEventListener('resize', () => {
+            if (gameState.currentScreen === 'game-screen') {
+                resizeCanvas();
+            }
+        });
+        
+        // Settings toggles - with error handling
+        const soundToggle = document.getElementById('sound-toggle');
+        if (soundToggle) {
+            soundToggle.addEventListener('change', (e) => {
+                settings.soundEnabled = e.target.checked;
+                saveSettings();
+            });
+        }
+        
+        const particlesToggle = document.getElementById('particles-toggle');
+        if (particlesToggle) {
+            particlesToggle.addEventListener('change', (e) => {
+                settings.particlesEnabled = e.target.checked;
+                saveSettings();
+            });
+        }
+        
+        const shakeToggle = document.getElementById('shake-toggle');
+        if (shakeToggle) {
+            shakeToggle.addEventListener('change', (e) => {
+                settings.screenShakeEnabled = e.target.checked;
+                saveSettings();
+            });
+        }
+        
+        const fpsToggle = document.getElementById('fps-toggle');
+        if (fpsToggle) {
+            fpsToggle.addEventListener('change', (e) => {
+                settings.showFPS = e.target.checked;
+                const fpsDisplay = document.getElementById('fps-display');
+                if (fpsDisplay) {
+                    fpsDisplay.style.display = e.target.checked ? 'block' : 'none';
                 }
-                e.preventDefault();
-                break;
+                saveSettings();
+            });
         }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-        switch(e.code) {
-            case 'KeyW':
-            case 'ArrowUp':
-                keys.up = false;
-                break;
-            case 'KeyS':
-            case 'ArrowDown':
-                keys.down = false;
-                break;
-            case 'Space':
-                keys.space = false;
-                break;
-        }
-    });
-    
-    // Touch events for mobile
-    const touchUp = document.getElementById('touch-up');
-    const touchDown = document.getElementById('touch-down');
-    
-    if (touchUp && touchDown) {
-        touchUp.addEventListener('touchstart', (e) => {
-            touchState.up = true;
-            e.preventDefault();
-        });
         
-        touchUp.addEventListener('touchend', (e) => {
-            touchState.up = false;
-            e.preventDefault();
-        });
-        
-        touchDown.addEventListener('touchstart', (e) => {
-            touchState.down = true;
-            e.preventDefault();
-        });
-        
-        touchDown.addEventListener('touchend', (e) => {
-            touchState.down = false;
-            e.preventDefault();
-        });
+        console.log('Event listeners setup complete');
+    } catch (error) {
+        console.error('Error setting up event listeners:', error);
     }
-    
-    // Window resize
-    window.addEventListener('resize', () => {
-        if (gameState.currentScreen === 'game-screen') {
-            resizeCanvas();
-        }
-    });
-    
-    // Settings toggles
-    document.getElementById('sound-toggle').addEventListener('change', (e) => {
-        settings.soundEnabled = e.target.checked;
-        saveSettings();
-    });
-    
-    document.getElementById('particles-toggle').addEventListener('change', (e) => {
-        settings.particlesEnabled = e.target.checked;
-        saveSettings();
-    });
-    
-    document.getElementById('shake-toggle').addEventListener('change', (e) => {
-        settings.screenShakeEnabled = e.target.checked;
-        saveSettings();
-    });
-    
-    document.getElementById('fps-toggle').addEventListener('change', (e) => {
-        settings.showFPS = e.target.checked;
-        document.getElementById('fps-display').style.display = e.target.checked ? 'block' : 'none';
-        saveSettings();
-    });
 }
 
 function gameLoop(currentTime = 0) {
@@ -1187,4 +1237,11 @@ function clearRecords() {
 }
 
 // Initialize game when page loads
-document.addEventListener('DOMContentLoaded', initGame);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded - Starting initialization...');
+    
+    // Add a small delay to ensure all elements are ready
+    setTimeout(() => {
+        initGame();
+    }, 100);
+});

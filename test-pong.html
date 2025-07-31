@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modern Pong</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .test-buttons {
+            margin: 20px 0;
+        }
+        button {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0080ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Modern Pong Test Page</h1>
+    <p>Click the button below to open the game:</p>
+    
+    <div class="test-buttons">
+        <button onclick="window.open('modern-pong.html', '_blank')">Open Modern Pong</button>
+        <button onclick="window.location.href='modern-pong.html'">Go to Modern Pong</button>
+    </div>
+    
+    <div>
+        <h3>How to play:</h3>
+        <ol>
+            <li>Click "Play Game" on the main menu</li>
+            <li>Select your game mode, difficulty, and AI personality</li>
+            <li>Click "Start Game"</li>
+            <li>Use W/S or Arrow keys to move your paddle</li>
+            <li>Have fun!</li>
+        </ol>
+    </div>
+
+    <script>
+        console.log('Test page loaded successfully');
+        
+        // Test if Modern Pong loads correctly
+        function testModernPong() {
+            try {
+                console.log('Testing Modern Pong...');
+                
+                // Check if we can access the game files
+                fetch('modern-pong.html')
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✅ modern-pong.html is accessible');
+                        } else {
+                            console.error('❌ Cannot access modern-pong.html');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error accessing modern-pong.html:', error);
+                    });
+                    
+                fetch('modern-pong.css')
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✅ modern-pong.css is accessible');
+                        } else {
+                            console.error('❌ Cannot access modern-pong.css');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error accessing modern-pong.css:', error);
+                    });
+                    
+                fetch('modern-pong.js')
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✅ modern-pong.js is accessible');
+                        } else {
+                            console.error('❌ Cannot access modern-pong.js');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error accessing modern-pong.js:', error);
+                    });
+                    
+            } catch (error) {
+                console.error('Test failed:', error);
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testModernPong);
+    </script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Modern Pong</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-container {
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .neon-text {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 
+                0 0 5px #00ffff,
+                0 0 10px #00ffff,
+                0 0 15px #00ffff,
+                0 0 20px #00ffff;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 128, 255, 0.1));
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: inherit;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(0, 128, 255, 0.2));
+            transform: translateY(-2px);
+        }
+
+        #game-canvas {
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            margin: 20px 0;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 10px;
+            font-size: 2rem;
+            color: #00ffff;
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .hud {
+                width: 90vw;
+                font-size: 1.5rem;
+            }
+            
+            #game-canvas {
+                width: 90vw;
+                height: 45vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen active">
+            <h1 class="neon-text">MODERN PONG</h1>
+            <button class="menu-btn" onclick="startGame()">🎮 Start Game</button>
+            <div class="controls">
+                <p>Use W/S or Arrow Keys to move your paddle</p>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <button class="menu-btn" onclick="backToMenu()" style="margin-bottom: 20px;">← Back to Menu</button>
+            
+            <div class="hud">
+                <div>You: <span id="player-score">0</span></div>
+                <div>AI: <span id="ai-score">0</span></div>
+            </div>
+            
+            <canvas id="game-canvas" width="800" height="400"></canvas>
+            
+            <div class="controls">
+                <p>W/S or ↑/↓ to move • Space to pause • First to 5 wins!</p>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over" class="screen">
+            <h2 class="neon-text" id="result-text">Game Over!</h2>
+            <div class="hud">
+                <div>Final Score - You: <span id="final-player">0</span></div>
+                <div>AI: <span id="final-ai">0</span></div>
+            </div>
+            <button class="menu-btn" onclick="startGame()">Play Again</button>
+            <button class="menu-btn" onclick="backToMenu()">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        console.log('Starting Simple Modern Pong...');
+
+        // Game variables
+        let canvas, ctx;
+        let gameRunning = false;
+        let keys = { up: false, down: false };
+        
+        // Game objects
+        let ball = {
+            x: 400,
+            y: 200,
+            vx: 5,
+            vy: 3,
+            radius: 8
+        };
+        
+        let playerPaddle = {
+            x: 30,
+            y: 160,
+            width: 12,
+            height: 80,
+            speed: 8
+        };
+        
+        let aiPaddle = {
+            x: 758,
+            y: 160,
+            width: 12,
+            height: 80,
+            speed: 6
+        };
+        
+        let playerScore = 0;
+        let aiScore = 0;
+
+        // Initialize
+        function init() {
+            console.log('Initializing game...');
+            
+            canvas = document.getElementById('game-canvas');
+            if (!canvas) {
+                console.error('Canvas not found!');
+                return;
+            }
+            
+            ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('Cannot get canvas context!');
+                return;
+            }
+            
+            setupControls();
+            console.log('Game initialized successfully!');
+        }
+
+        function setupControls() {
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'w':
+                    case 'W':
+                    case 'ArrowUp':
+                        keys.up = true;
+                        e.preventDefault();
+                        break;
+                    case 's':
+                    case 'S':
+                    case 'ArrowDown':
+                        keys.down = true;
+                        e.preventDefault();
+                        break;
+                    case ' ':
+                        if (gameRunning) {
+                            gameRunning = false;
+                            setTimeout(() => gameRunning = true, 500);
+                        }
+                        e.preventDefault();
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                switch(e.key) {
+                    case 'w':
+                    case 'W':
+                    case 'ArrowUp':
+                        keys.up = false;
+                        break;
+                    case 's':
+                    case 'S':
+                    case 'ArrowDown':
+                        keys.down = false;
+                        break;
+                }
+            });
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            console.log('Starting game...');
+            
+            // Reset game state
+            playerScore = 0;
+            aiScore = 0;
+            ball.x = 400;
+            ball.y = 200;
+            ball.vx = (Math.random() > 0.5 ? 1 : -1) * 5;
+            ball.vy = (Math.random() - 0.5) * 6;
+            playerPaddle.y = 160;
+            aiPaddle.y = 160;
+            
+            updateScore();
+            showScreen('game-screen');
+            
+            gameRunning = true;
+            gameLoop();
+        }
+
+        function backToMenu() {
+            gameRunning = false;
+            showScreen('main-menu');
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            // Move player paddle
+            if (keys.up && playerPaddle.y > 0) {
+                playerPaddle.y -= playerPaddle.speed;
+            }
+            if (keys.down && playerPaddle.y < canvas.height - playerPaddle.height) {
+                playerPaddle.y += playerPaddle.speed;
+            }
+            
+            // Move AI paddle (simple AI)
+            const aiCenter = aiPaddle.y + aiPaddle.height / 2;
+            if (ball.y < aiCenter - 10) {
+                aiPaddle.y = Math.max(0, aiPaddle.y - aiPaddle.speed);
+            } else if (ball.y > aiCenter + 10) {
+                aiPaddle.y = Math.min(canvas.height - aiPaddle.height, aiPaddle.y + aiPaddle.speed);
+            }
+            
+            // Move ball
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            
+            // Ball collision with top/bottom
+            if (ball.y <= ball.radius || ball.y >= canvas.height - ball.radius) {
+                ball.vy = -ball.vy;
+            }
+            
+            // Ball collision with paddles
+            if (ball.x <= playerPaddle.x + playerPaddle.width &&
+                ball.y >= playerPaddle.y &&
+                ball.y <= playerPaddle.y + playerPaddle.height &&
+                ball.vx < 0) {
+                ball.vx = -ball.vx;
+                ball.vy += (ball.y - (playerPaddle.y + playerPaddle.height/2)) * 0.1;
+            }
+            
+            if (ball.x >= aiPaddle.x - ball.radius &&
+                ball.y >= aiPaddle.y &&
+                ball.y <= aiPaddle.y + aiPaddle.height &&
+                ball.vx > 0) {
+                ball.vx = -ball.vx;
+                ball.vy += (ball.y - (aiPaddle.y + aiPaddle.height/2)) * 0.1;
+            }
+            
+            // Score
+            if (ball.x < 0) {
+                aiScore++;
+                resetBall();
+                updateScore();
+                checkGameEnd();
+            } else if (ball.x > canvas.width) {
+                playerScore++;
+                resetBall();
+                updateScore();
+                checkGameEnd();
+            }
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.vx = (Math.random() > 0.5 ? 1 : -1) * 5;
+            ball.vy = (Math.random() - 0.5) * 6;
+        }
+
+        function updateScore() {
+            document.getElementById('player-score').textContent = playerScore;
+            document.getElementById('ai-score').textContent = aiScore;
+        }
+
+        function checkGameEnd() {
+            if (playerScore >= 5 || aiScore >= 5) {
+                gameRunning = false;
+                document.getElementById('final-player').textContent = playerScore;
+                document.getElementById('final-ai').textContent = aiScore;
+                document.getElementById('result-text').textContent = 
+                    playerScore > aiScore ? 'You Win!' : 'AI Wins!';
+                showScreen('game-over');
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw center line
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw paddles
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
+            
+            ctx.fillStyle = '#ff0080';
+            ctx.fillRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height);
+            
+            // Draw ball
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add glow effect
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing...');
+            init();
+        });
+    </script>
+</body>
+</html>
